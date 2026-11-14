@@ -2,5 +2,8 @@
     "issuer": "https://oidc.example.com",
     "client_id": "client-id",
     "client_secret": "client-secret",
-    "redirect_url": "https://mythic.example.com/auth_acs/OIDC/OIDC"
+    "redirect_url": "https://mythic.example.com/auth_acs/OIDC/OIDC",
+    "mtls_cert_file": "",
+    "mtls_key_file": "",
+    "mtls_ca_file": ""
 }

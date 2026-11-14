@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Support for mutual TLS and custom CA trust using files uploaded to Mythic's
-  operation file store (`oidc_mtls_client.pem`, `oidc_mtls_client.key`,
-  `oidc_mtls_ca.pem`), with periodic certificate rotation checks.
+- Support for mutual TLS and custom CA trust using certificate files uploaded
+  through the auth container's file browser. Filenames are configured with
+  `mtls_cert_file`, `mtls_key_file`, and `mtls_ca_file` in `config.json`.
 
 ## [1.0.0] - 12 April 2026
 

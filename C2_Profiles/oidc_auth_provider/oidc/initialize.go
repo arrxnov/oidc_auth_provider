@@ -35,6 +35,19 @@ type Config struct {
 	// RedirectURL is the URL to which the authorization server will send the user after granting authorization.
 	// <MYTHIC_URL>/auth_acs/OIDC/OIDC
 	RedirectURL string `json:"redirect_url"`
+
+	// MTLSCertFile is the filename of the client certificate uploaded through
+	// the auth container's file browser. Leave empty to disable client auth.
+	MTLSCertFile string `json:"mtls_cert_file"`
+
+	// MTLSKeyFile is the filename of the client private key uploaded through
+	// the auth container's file browser.
+	MTLSKeyFile string `json:"mtls_key_file"`
+
+	// MTLSCAFile is the filename of the CA bundle uploaded through the auth
+	// container's file browser. When set, it replaces the system trust store
+	// for OIDC requests.
+	MTLSCAFile string `json:"mtls_ca_file"`
 }
 
 func randomString(length int) string {
@@ -80,9 +93,6 @@ func Initialize() {
 		IDPServices:    []string{name},
 		NonIDPServices: nil,
 		OnContainerStartFunction: func(message sharedStructs.ContainerOnStartMessage) sharedStructs.ContainerOnStartMessageResponse {
-			// Auth happens before any task/callback exists, so scope the mTLS
-			// file lookup to the operation Mythic reports here.
-			setScopeOperation(message.OperationID)
 			return sharedStructs.ContainerOnStartMessageResponse{}
 		},
 		GetIDPMetadata: func(message authstructs.GetIDPMetadataMessage) authstructs.GetIDPMetadataMessageResponse {
@@ -96,7 +106,7 @@ func Initialize() {
 				return response
 			}
 
-			ctx, err := withIdPClient(context.Background())
+			ctx, err := withIdPClient(context.Background(), cfg)
 			if err != nil {
 				response.Error = fmt.Sprintf("Failed to configure mTLS: %v", err)
 				return response
@@ -126,7 +136,7 @@ func Initialize() {
 				return response
 			}
 
-			ctx, err := withIdPClient(context.Background())
+			ctx, err := withIdPClient(context.Background(), cfg)
 			if err != nil {
 				response.Error = fmt.Sprintf("Failed to configure mTLS: %v", err)
 				return response
@@ -172,7 +182,7 @@ func Initialize() {
 				return response
 			}
 
-			ctx, err := withIdPClient(context.Background())
+			ctx, err := withIdPClient(context.Background(), cfg)
 			if err != nil {
 				response.Error = fmt.Sprintf("Failed to configure mTLS: %v", err)
 				return response
