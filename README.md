@@ -38,4 +38,24 @@ Once the configuration is saved, users can log in to Mythic via the configured O
 
 > **Note:** The user must already exist in Mythic, and their Mythic email address must match the one registered with the OIDC provider.
 
+## mTLS
+
+If the OIDC provider requires mutual TLS (or a private certificate authority), upload the files through the Mythic UI under **Files → Uploads** using exactly these names:
+
+| File | Purpose |
+| --- | --- |
+| `oidc_mtls_client.pem` | Client certificate (PEM) |
+| `oidc_mtls_client.key` | Client private key (PEM) |
+| `oidc_mtls_ca.pem` | CA bundle used to trust the provider (PEM) |
+
+The files are optional and are read from Mythic's file store at login, so no files need to be mounted and `config.json` does not change:
+
+- **None present** – mTLS is disabled and behaviour is unchanged.
+- **CA only** – the provider is trusted using only the uploaded CA bundle.
+- **Client certificate + key (with or without CA)** – mutual TLS is used. Uploading only one half of the keypair is treated as an error.
+
+The provider checks for updated uploads at most once per minute. To rotate a certificate or CA, upload a new file with the same name; the container picks it up on the next login without a restart. Deleted files are no longer used.
+
+> **Note:** When a CA bundle is uploaded, it replaces the system trust store for OIDC requests. Append any public roots you also need to the uploaded bundle.
+
 ![](.assets/step-3.png)

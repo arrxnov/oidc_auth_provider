@@ -80,6 +80,9 @@ func Initialize() {
 		IDPServices:    []string{name},
 		NonIDPServices: nil,
 		OnContainerStartFunction: func(message sharedStructs.ContainerOnStartMessage) sharedStructs.ContainerOnStartMessageResponse {
+			// Auth happens before any task/callback exists, so scope the mTLS
+			// file lookup to the operation Mythic reports here.
+			setScopeOperation(message.OperationID)
 			return sharedStructs.ContainerOnStartMessageResponse{}
 		},
 		GetIDPMetadata: func(message authstructs.GetIDPMetadataMessage) authstructs.GetIDPMetadataMessageResponse {
@@ -93,7 +96,13 @@ func Initialize() {
 				return response
 			}
 
-			oidcProvider, _, err := oauth2Config(context.Background(), cfg)
+			ctx, err := withIdPClient(context.Background())
+			if err != nil {
+				response.Error = fmt.Sprintf("Failed to configure mTLS: %v", err)
+				return response
+			}
+
+			oidcProvider, _, err := oauth2Config(ctx, cfg)
 			if err != nil {
 				response.Error = fmt.Sprintf("Failed to create OAuth2 config: %v", err)
 				return response
@@ -117,7 +126,13 @@ func Initialize() {
 				return response
 			}
 
-			_, oauth2Config, err := oauth2Config(context.Background(), cfg)
+			ctx, err := withIdPClient(context.Background())
+			if err != nil {
+				response.Error = fmt.Sprintf("Failed to configure mTLS: %v", err)
+				return response
+			}
+
+			_, oauth2Config, err := oauth2Config(ctx, cfg)
 			if err != nil {
 				response.Error = fmt.Sprintf("Failed to create OAuth2 config: %v", err)
 				return response
@@ -157,7 +172,11 @@ func Initialize() {
 				return response
 			}
 
-			ctx := context.Background()
+			ctx, err := withIdPClient(context.Background())
+			if err != nil {
+				response.Error = fmt.Sprintf("Failed to configure mTLS: %v", err)
+				return response
+			}
 
 			oidcProvider, oauth2Config, err := oauth2Config(ctx, cfg)
 			if err != nil {
